@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A fast dark toolbox for network and dev work: subnet calculator, IP/ASN lookup, base & timestamp converters, base64/URL, JSON, regex, generators." />
+  <title>Net Toolbox</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <meta name="theme-color" content="#0b0f0d" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <aside id="nav">
+      <div class="brand"><span class="dot2"></span> Net Toolbox</div>
+      <button class="navi on" data-p="p-subnet">Subnet / CIDR</button>
+      <button class="navi" data-p="p-ip">IP / ASN lookup</button>
+      <button class="navi" data-p="p-base">Base converter</button>
+      <button class="navi" data-p="p-time">Timestamp</button>
+      <button class="navi" data-p="p-encode">Base64 / URL</button>
+      <button class="navi" data-p="p-json">JSON</button>
+      <button class="navi" data-p="p-regex">Regex</button>
+      <button class="navi" data-p="p-gen">Generators</button>
+    </aside>
+
+    <main id="main">
+      <!-- Subnet -->
+      <section id="p-subnet" class="panel on">
+        <h2>Subnet / CIDR calculator</h2>
+        <div class="row"><input id="cidr" placeholder="192.168.1.10/24" value="192.168.1.10/24" spellcheck="false" /></div>
+        <div id="subnet-out" class="out"></div>
+      </section>
+
+      <!-- IP lookup -->
+      <section id="p-ip" class="panel">
+        <h2>IP / ASN lookup</h2>
+        <div class="row">
+          <input id="ipq" placeholder="8.8.8.8 (blank = your IP)" spellcheck="false" />
+          <button id="ipgo">Look up</button>
+        </div>
+        <div id="ip-out" class="out"></div>
+      </section>
+
+      <!-- Base -->
+      <section id="p-base" class="panel">
+        <h2>Base converter</h2>
+        <div class="field"><label>Decimal</label><input id="b-dec" data-base="10" spellcheck="false" /></div>
+        <div class="field"><label>Hex</label><input id="b-hex" data-base="16" spellcheck="false" /></div>
+        <div class="field"><label>Binary</label><input id="b-bin" data-base="2" spellcheck="false" /></div>
+        <div class="field"><label>Octal</label><input id="b-oct" data-base="8" spellcheck="false" /></div>
+      </section>
+
+      <!-- Timestamp -->
+      <section id="p-time" class="panel">
+        <h2>Timestamp converter</h2>
+        <div class="field"><label>Now</label><div id="t-now" class="mono big"></div></div>
+        <div class="field"><label>Unix epoch (s or ms)</label><input id="t-epoch" placeholder="1750000000" spellcheck="false" /></div>
+        <div id="t-from-epoch" class="out"></div>
+        <div class="field"><label>Date &amp; time</label><input id="t-date" type="datetime-local" /></div>
+        <div id="t-from-date" class="out"></div>
+      </section>
+
+      <!-- Encode -->
+      <section id="p-encode" class="panel">
+        <h2>Base64 / URL encode</h2>
+        <textarea id="enc-in" rows="4" placeholder="text…" spellcheck="false"></textarea>
+        <div class="row wrap">
+          <button data-enc="b64">Base64 encode</button>
+          <button data-enc="b64d">Base64 decode</button>
+          <button data-enc="url">URL encode</button>
+          <button data-enc="urld">URL decode</button>
+        </div>
+        <textarea id="enc-out" rows="4" placeholder="result…" spellcheck="false" readonly></textarea>
+      </section>
+
+      <!-- JSON -->
+      <section id="p-json" class="panel">
+        <h2>JSON formatter</h2>
+        <textarea id="json-in" rows="8" placeholder='{"paste":"json here"}' spellcheck="false"></textarea>
+        <div class="row wrap">
+          <button data-json="pretty">Pretty</button>
+          <button data-json="min">Minify</button>
+          <span id="json-msg" class="msg"></span>
+        </div>
+        <textarea id="json-out" rows="8" spellcheck="false" readonly></textarea>
+      </section>
+
+      <!-- Regex -->
+      <section id="p-regex" class="panel">
+        <h2>Regex tester</h2>
+        <div class="row"><input id="rx-pat" placeholder="\\b\\w+@\\w+\\.\\w+\\b" spellcheck="false" /><input id="rx-flags" class="flags" placeholder="gi" value="g" spellcheck="false" /></div>
+        <textarea id="rx-test" rows="6" placeholder="test string…" spellcheck="false"></textarea>
+        <div id="rx-msg" class="msg"></div>
+        <div id="rx-out" class="hl"></div>
+      </section>
+
+      <!-- Generators -->
+      <section id="p-gen" class="panel">
+        <h2>Generators</h2>
+        <div class="field"><label>UUID v4</label><div class="row"><input id="g-uuid" readonly class="mono" /><button id="g-uuid-btn">New</button></div></div>
+        <div class="field"><label>Password <span id="g-pwlen-l" class="muted">20</span></label>
+          <div class="row"><input id="g-pwlen" type="range" min="6" max="64" value="20" /><button id="g-pw-btn">Generate</button></div>
+          <input id="g-pw" readonly class="mono" />
+        </div>
+        <div class="field"><label>Random hex (32 bytes)</label><div class="row"><input id="g-hex" readonly class="mono" /><button id="g-hex-btn">New</button></div></div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
