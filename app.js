@@ -628,6 +628,144 @@ function mdRender(src) {
 function md() { $('md-out').innerHTML = mdRender($('md-in').value); }
 $('md-in').addEventListener('input', md); md();
 
+// ── copy literal text (palette chips etc.) ──
+document.addEventListener('click', e => { const c = e.target.closest('[data-copy-text]'); if (c) navigator.clipboard.writeText(c.dataset.copyText).then(toast); });
+
+// ── HTTP status codes ──
+const HTTP_CODES = { 100: 'Continue', 101: 'Switching Protocols', 103: 'Early Hints', 200: 'OK', 201: 'Created', 202: 'Accepted', 204: 'No Content', 206: 'Partial Content', 301: 'Moved Permanently', 302: 'Found', 303: 'See Other', 304: 'Not Modified', 307: 'Temporary Redirect', 308: 'Permanent Redirect', 400: 'Bad Request', 401: 'Unauthorized', 402: 'Payment Required', 403: 'Forbidden', 404: 'Not Found', 405: 'Method Not Allowed', 406: 'Not Acceptable', 408: 'Request Timeout', 409: 'Conflict', 410: 'Gone', 413: 'Payload Too Large', 414: 'URI Too Long', 415: 'Unsupported Media Type', 418: "I'm a teapot", 422: 'Unprocessable Entity', 425: 'Too Early', 429: 'Too Many Requests', 451: 'Unavailable For Legal Reasons', 500: 'Internal Server Error', 501: 'Not Implemented', 502: 'Bad Gateway', 503: 'Service Unavailable', 504: 'Gateway Timeout', 511: 'Network Authentication Required' };
+function httpCodes() {
+  const q = $('http-q').value.trim().toLowerCase(); const out = $('http-out');
+  const rows = Object.entries(HTTP_CODES).filter(([c, n]) => !q || c.includes(q) || n.toLowerCase().includes(q));
+  out.innerHTML = rows.length ? rows.map(([c, n]) => kv(c, n, c[0] === '2')).join('') : '<div class="err">No matching status code</div>';
+}
+$('http-q').addEventListener('input', httpCodes); httpCodes();
+
+// ── Bitwise calculator (32-bit) ──
+function bwParse(v) { v = v.trim().toLowerCase(); if (!v) return null; let n; if (/^0x[0-9a-f]+$/.test(v)) n = parseInt(v, 16); else if (/^0b[01]+$/.test(v)) n = parseInt(v.slice(2), 2); else if (/^\d+$/.test(v)) n = parseInt(v, 10); else return null; return isFinite(n) ? n >>> 0 : null; }
+function fmt32(n) { n = n >>> 0; return n.toString() + '  ·  0x' + n.toString(16).toUpperCase() + '  ·  0b' + n.toString(2); }
+function bitwise() {
+  const a = bwParse($('bw-a').value), b = bwParse($('bw-b').value); const out = $('bw-out');
+  if (a === null) { out.innerHTML = '<div class="err">Enter A as decimal, 0x.. or 0b..</div>'; return; }
+  let html = kv('A', fmt32(a), true);
+  if (b !== null) html += kv('B', fmt32(b)) + kv('A AND B', fmt32(a & b), true) + kv('A OR B', fmt32(a | b), true) + kv('A XOR B', fmt32(a ^ b), true) + kv('A << B', fmt32(a << b)) + kv('A >>> B', fmt32(a >>> b));
+  html += kv('NOT A', fmt32(~a));
+  out.innerHTML = html;
+}
+['bw-a', 'bw-b'].forEach(id => $(id).addEventListener('input', bitwise)); bitwise();
+
+// ── Timezone converter ──
+const TZS = ['UTC', 'America/Los_Angeles', 'America/New_York', 'America/Sao_Paulo', 'Europe/London', 'Europe/Paris', 'Europe/Moscow', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland'];
+function tzOffset(timeZone, date) {
+  const p = new Intl.DateTimeFormat('en-US', { timeZone, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(date).reduce((a, x) => { a[x.type] = x.value; return a; }, {});
+  return (Date.UTC(+p.year, p.month - 1, +p.day, p.hour === '24' ? 0 : +p.hour, +p.minute, +p.second) - date.getTime()) / 60000;
+}
+function zonedToUtc(y, mo, d, h, mi, tz) { const guess = Date.UTC(y, mo - 1, d, h, mi); return new Date(guess - tzOffset(tz, new Date(guess)) * 60000); }
+function tz() {
+  const out = $('tz-out'); const v = $('tz-dt').value; if (!v) { out.innerHTML = ''; return; }
+  const [date, time] = v.split('T'); const [y, mo, d] = date.split('-').map(Number); const [h, mi] = time.split(':').map(Number);
+  const src = $('tz-src').value; const inst = zonedToUtc(y, mo, d, h, mi, src);
+  out.innerHTML = TZS.map(z => kv(z.replace(/_/g, ' '), new Intl.DateTimeFormat('en-GB', { timeZone: z, dateStyle: 'medium', timeStyle: 'short' }).format(inst), z === src)).join('');
+}
+(function tzInit() {
+  const local = Intl.DateTimeFormat().resolvedOptions().timeZone; if (local && !TZS.includes(local)) TZS.unshift(local);
+  $('tz-src').innerHTML = TZS.map(z => `<option${z === local ? ' selected' : ''}>${z}</option>`).join('');
+  const n = new Date(), pad = x => String(x).padStart(2, '0');
+  $('tz-dt').value = `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}T${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  $('tz-dt').addEventListener('input', tz); $('tz-src').addEventListener('change', tz); tz();
+})();
+
+// ── ASCII / Unicode inspector ──
+function uni() {
+  const chars = [...$('uni-in').value]; const out = $('uni-out');
+  if (!chars.length) { out.innerHTML = ''; return; }
+  const rows = chars.slice(0, 80).map(ch => {
+    const cp = ch.codePointAt(0); const bytes = [...new TextEncoder().encode(ch)].map(b => b.toString(16).padStart(2, '0')).join(' ');
+    return kv(`${esc(ch)}  U+${cp.toString(16).toUpperCase().padStart(4, '0')}`, `dec ${cp} · UTF-8 ${bytes} · &amp;#${cp};`);
+  }).join('');
+  out.innerHTML = rows + (chars.length > 80 ? kv('…', (chars.length - 80) + ' more characters') : '');
+}
+$('uni-in').addEventListener('input', uni); uni();
+
+// ── JSON → TypeScript ──
+function jsonToTs(json) {
+  const data = JSON.parse(json); const interfaces = [];
+  const tn = k => (k.charAt(0).toUpperCase() + k.slice(1).replace(/[^a-zA-Z0-9]/g, '')) || 'Item';
+  const singular = n => n.endsWith('s') ? n.slice(0, -1) : n + 'Item';
+  function infer(val, name) {
+    if (val === null) return 'any';
+    if (Array.isArray(val)) return (val.length ? infer(val[0], singular(name)) : 'any') + '[]';
+    if (typeof val === 'object') { build(val, name); return name; }
+    return typeof val === 'string' ? 'string' : typeof val === 'number' ? 'number' : typeof val === 'boolean' ? 'boolean' : 'any';
+  }
+  function build(obj, name) {
+    const lines = Object.entries(obj).map(([k, v]) => { const safe = /^[a-zA-Z_$][\w$]*$/.test(k) ? k : JSON.stringify(k); return `  ${safe}: ${infer(v, tn(k))};`; });
+    interfaces.push(`interface ${name} {\n${lines.join('\n')}\n}`);
+  }
+  if (data && typeof data === 'object' && !Array.isArray(data)) { build(data, 'Root'); return interfaces.reverse().join('\n\n'); }
+  if (Array.isArray(data)) { const t = infer(data, 'Root'); return (interfaces.reverse().join('\n\n') + (interfaces.length ? '\n\n' : '') + `type Root = ${t};`).trim(); }
+  return `type Root = ${infer(data, 'Root')};`;
+}
+$('ts-go').addEventListener('click', () => { const msg = $('ts-msg'); try { $('ts-out').value = jsonToTs($('ts-in').value); msg.textContent = ''; } catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; } });
+
+// ── Colour palette ──
+function hslToRgb(h, s, l) { h /= 360; s /= 100; l /= 100; let r, g, b; if (s === 0) r = g = b = l; else { const hu = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }; const q = l < .5 ? l * (1 + s) : l + s - l * s; const p = 2 * l - q; r = hu(p, q, h + 1 / 3); g = hu(p, q, h); b = hu(p, q, h - 1 / 3); } return [r, g, b].map(x => Math.round(x * 255)); }
+const toHex = rgb => '#' + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+function palRow(title, cols) { return `<div class="pal-row"><div class="pal-label">${title}</div><div class="pal-sw">` + cols.map(c => `<button class="sw-chip" data-copy-text="${c}" style="background:${c}"><span>${c}</span></button>`).join('') + `</div></div>`; }
+function palette() {
+  const rgb = hexToRgb($('pal-in').value.trim()); const out = $('pal-out');
+  if (!rgb) { out.innerHTML = '<div class="err">Enter a hex colour like #6366f1</div>'; return; }
+  const [h, s, l] = rgbToHsl(...rgb);
+  const tints = [80, 60, 40, 20].map(t => toHex(hslToRgb(h, s, Math.min(96, l + (100 - l) * t / 100))));
+  const shades = [20, 40, 60, 80].map(t => toHex(hslToRgb(h, s, Math.max(4, l * (1 - t / 100)))));
+  out.innerHTML = palRow('Base', [toHex(rgb)]) + palRow('Tints', tints) + palRow('Shades', shades) +
+    palRow('Analogous', [-30, 30].map(d => toHex(hslToRgb((h + d + 360) % 360, s, l)))) + palRow('Complementary', [toHex(hslToRgb((h + 180) % 360, s, l))]);
+}
+$('pal-in').addEventListener('input', palette);
+$('pal-pick').addEventListener('input', e => { $('pal-in').value = e.target.value; palette(); }); palette();
+
+// ── CSS gradient ──
+function gradient() {
+  const c1 = $('gr-c1').value, c2 = $('gr-c2').value, type = $('gr-type').value, ang = $('gr-ang').value;
+  const css = type === 'linear' ? `linear-gradient(${ang}deg, ${c1}, ${c2})` : `radial-gradient(circle, ${c1}, ${c2})`;
+  $('gr-prev').style.background = css; $('gr-code').textContent = 'background: ' + css + ';'; $('gr-ang-l').textContent = ang + '°';
+}
+['gr-c1', 'gr-c2', 'gr-type', 'gr-ang'].forEach(id => $(id).addEventListener('input', gradient)); gradient();
+
+// ── Image → Base64 ──
+function imgFile(file) {
+  if (!file || !file.type.startsWith('image/')) { $('img-msg').className = 'msg bad'; $('img-msg').textContent = 'Please choose an image file'; return; }
+  const r = new FileReader();
+  r.onload = () => { const uri = r.result; $('img-out').value = uri; $('img-prev').innerHTML = `<img src="${uri}" alt="preview">`; $('img-msg').className = 'msg'; $('img-msg').textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB → base64 ${(uri.length / 1024).toFixed(1)} KB`; };
+  r.readAsDataURL(file);
+}
+function wireDrop(zoneId, fileId, handler) {
+  const z = $(zoneId); $(fileId).addEventListener('change', e => handler(e.target.files[0]));
+  ['dragover', 'dragenter'].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.add('drag'); }));
+  ['dragleave', 'drop'].forEach(ev => z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove('drag'); }));
+  z.addEventListener('drop', e => handler(e.dataTransfer.files[0]));
+}
+wireDrop('img-drop', 'img-file', imgFile);
+
+// ── File hash ──
+async function fhashFile(file) {
+  if (!file) return; $('fh-msg').className = 'msg'; $('fh-msg').textContent = `Hashing ${file.name}…`;
+  const buf = await file.arrayBuffer(); let html = '';
+  for (const a of ['SHA-1', 'SHA-256', 'SHA-512']) { const h = await crypto.subtle.digest(a, buf); html += kv(a, [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join('')); }
+  $('fh-out').innerHTML = html; $('fh-msg').textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KB`;
+}
+wireDrop('fh-drop', 'fh-file', fhashFile);
+
+// ── WiFi QR ──
+function wifiQr() {
+  const ssid = $('wifi-ssid').value, pass = $('wifi-pass').value, sec = $('wifi-sec').value, hidden = $('wifi-hidden').checked, out = $('wifi-out');
+  if (!ssid) { out.innerHTML = '<div class="msg">Enter a network name to generate the QR.</div>'; return; }
+  const e2 = s => s.replace(/([\\;,:"])/g, '\\$1');
+  const payload = `WIFI:T:${sec};S:${e2(ssid)};${sec !== 'nopass' ? 'P:' + e2(pass) + ';' : ''}${hidden ? 'H:true;' : ''};`;
+  out.innerHTML = `<div class="qrbox"><img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&data=${encodeURIComponent(payload)}" width="240" height="240" alt="WiFi QR code"></div>`;
+}
+['wifi-ssid', 'wifi-pass', 'wifi-hidden'].forEach(id => $(id).addEventListener('input', wifiQr));
+$('wifi-sec').addEventListener('change', wifiQr); wifiQr();
+
 // ── scroll reveal + hero CTA ──
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
