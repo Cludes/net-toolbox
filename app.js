@@ -766,6 +766,185 @@ function wifiQr() {
 ['wifi-ssid', 'wifi-pass', 'wifi-hidden'].forEach(id => $(id).addEventListener('input', wifiQr));
 $('wifi-sec').addEventListener('change', wifiQr); wifiQr();
 
+// ── JSON / YAML ──
+function yamlScalar(v) {
+  if (v === null) return 'null';
+  if (typeof v === 'boolean' || typeof v === 'number') return String(v);
+  v = String(v);
+  if (v === '' || /^[\s>|@`"'#&*!?%\-\[\]{},]/.test(v) || /:\s|\s$|^\s/.test(v) || /^(true|false|null|~|[\d.+-])/i.test(v) || v.includes('\n') || v.includes(': ')) return JSON.stringify(v);
+  return v;
+}
+function yamlKey(k) { k = String(k); return /^[\w.\-/]+$/.test(k) ? k : JSON.stringify(k); }
+function jsonToYaml(data, indent = 0) {
+  const sp = '  '.repeat(indent);
+  if (data === null || typeof data !== 'object') return yamlScalar(data);
+  if (Array.isArray(data)) {
+    if (!data.length) return '[]';
+    return data.map(item => {
+      if (item !== null && typeof item === 'object' && (Array.isArray(item) ? item.length : Object.keys(item).length)) {
+        return sp + '- ' + jsonToYaml(item, indent + 1).slice((indent + 1) * 2);
+      }
+      return sp + '- ' + yamlScalar(item);
+    }).join('\n');
+  }
+  const keys = Object.keys(data);
+  if (!keys.length) return '{}';
+  return keys.map(k => {
+    const v = data[k];
+    if (v !== null && typeof v === 'object' && (Array.isArray(v) ? v.length : Object.keys(v).length)) return sp + yamlKey(k) + ':\n' + jsonToYaml(v, indent + 1);
+    return sp + yamlKey(k) + ': ' + yamlScalar(v);
+  }).join('\n');
+}
+function yamlToJson(text) {
+  const lines = text.replace(/\t/g, '  ').split('\n').filter(l => l.trim() !== '' && !/^\s*#/.test(l));
+  let i = 0; const indentOf = l => l.match(/^ */)[0].length;
+  function scalar(s) {
+    s = s.trim();
+    if (s === '' || s === '~' || s === 'null') return null;
+    if (s === 'true') return true; if (s === 'false') return false;
+    if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+    if (/^-?\d*\.\d+$/.test(s)) return parseFloat(s);
+    if (s[0] === '"') { try { return JSON.parse(s); } catch { return s.slice(1, -1); } }
+    if (s[0] === "'") return s.slice(1, -1).replace(/''/g, "'");
+    if (s[0] === '[' || s[0] === '{') { try { return JSON.parse(s); } catch { } }
+    return s;
+  }
+  function value(rest, curIndent) { rest = rest.trim(); if (rest !== '') return scalar(rest); if (i < lines.length && indentOf(lines[i]) > curIndent) return block(indentOf(lines[i])); return null; }
+  function block(indent) {
+    if (lines[i].slice(indent).startsWith('-')) {
+      const arr = [];
+      while (i < lines.length) {
+        const l = lines[i], ind = indentOf(l);
+        if (ind !== indent || !l.slice(ind).startsWith('-')) break;
+        let after = l.slice(ind + 1); const dashIndent = ind + 1 + (after.match(/^ */)[0].length); after = after.trim();
+        if (after === '') { i++; arr.push(i < lines.length && indentOf(lines[i]) > indent ? block(indentOf(lines[i])) : null); }
+        else if (/^("[^"]*"|'[^']*'|[^:\s][^:]*):(\s|$)/.test(after)) { lines[i] = ' '.repeat(dashIndent) + after; arr.push(block(dashIndent)); }
+        else { arr.push(scalar(after)); i++; }
+      }
+      return arr;
+    }
+    const obj = {};
+    while (i < lines.length) {
+      const l = lines[i], ind = indentOf(l);
+      if (ind !== indent) break;
+      const m = l.slice(ind).match(/^("(?:[^"\\]|\\.)*"|'[^']*'|[^:]+?)\s*:\s*(.*)$/);
+      if (!m) { i++; continue; }
+      const key = (m[1][0] === '"' || m[1][0] === "'") ? scalar(m[1]) : m[1].trim();
+      i++; obj[key] = value(m[2], ind);
+    }
+    return obj;
+  }
+  return lines.length ? block(indentOf(lines[0])) : null;
+}
+document.querySelectorAll('[data-yaml]').forEach(b => b.addEventListener('click', () => {
+  const msg = $('yaml-msg');
+  try { $('yaml-out').value = b.dataset.yaml === 'toyaml' ? jsonToYaml(JSON.parse($('yaml-in').value)) : JSON.stringify(yamlToJson($('yaml-in').value), null, 2); msg.textContent = ''; }
+  catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; }
+}));
+
+// ── Query string / JSON ──
+function qsToJson(s) {
+  s = s.trim().replace(/^[?#]+/, ''); const p = new URLSearchParams(s); const o = {};
+  for (const k of new Set([...p.keys()])) { const vals = p.getAll(k); o[k] = vals.length > 1 ? vals : vals[0]; }
+  return JSON.stringify(o, null, 2);
+}
+function jsonToQs(s) {
+  const o = JSON.parse(s); const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(o)) { if (Array.isArray(v)) v.forEach(x => p.append(k, x)); else p.append(k, v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v); }
+  return p.toString();
+}
+document.querySelectorAll('[data-qs]').forEach(b => b.addEventListener('click', () => {
+  const msg = $('qs-msg');
+  try { $('qs-out').value = b.dataset.qs === 'tojson' ? qsToJson($('qs-in').value) : jsonToQs($('qs-in').value); msg.textContent = ''; }
+  catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; }
+}));
+
+// ── JWT signer (HMAC) ──
+function b64url(bytes) { return btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+const b64urlStr = s => b64url(new TextEncoder().encode(s));
+async function jwtSign() {
+  const out = $('jws-out'), msg = $('jws-msg');
+  let payload; try { payload = JSON.parse($('jws-payload').value); } catch { msg.className = 'msg bad'; msg.textContent = 'Payload must be valid JSON'; out.value = ''; return; }
+  const alg = $('jws-alg').value; const hash = { HS256: 'SHA-256', HS384: 'SHA-384', HS512: 'SHA-512' }[alg];
+  const data = b64urlStr(JSON.stringify({ alg, typ: 'JWT' })) + '.' + b64urlStr(JSON.stringify(payload));
+  try {
+    const ck = await crypto.subtle.importKey('raw', new TextEncoder().encode($('jws-secret').value), { name: 'HMAC', hash }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', ck, new TextEncoder().encode(data));
+    out.value = data + '.' + b64url(sig); msg.className = 'msg ok'; msg.textContent = 'signed (decode it in the JWT tool)';
+  } catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; }
+}
+['jws-payload', 'jws-secret'].forEach(id => $(id).addEventListener('input', jwtSign));
+$('jws-alg').addEventListener('change', jwtSign); jwtSign();
+
+// ── ROT13 / Caesar ──
+function caesar(s, n) { return s.replace(/[a-z]/gi, c => { const base = c <= 'Z' ? 65 : 97; return String.fromCharCode((c.charCodeAt(0) - base + n) % 26 + base); }); }
+function rot() { const n = +$('rot-n').value; $('rot-n-l').textContent = n; $('rot-out').value = caesar($('rot-in').value, n); }
+['rot-in', 'rot-n'].forEach(id => $(id).addEventListener('input', rot)); rot();
+
+// ── NATO phonetic ──
+const NATO = { a: 'Alfa', b: 'Bravo', c: 'Charlie', d: 'Delta', e: 'Echo', f: 'Foxtrot', g: 'Golf', h: 'Hotel', i: 'India', j: 'Juliett', k: 'Kilo', l: 'Lima', m: 'Mike', n: 'November', o: 'Oscar', p: 'Papa', q: 'Quebec', r: 'Romeo', s: 'Sierra', t: 'Tango', u: 'Uniform', v: 'Victor', w: 'Whiskey', x: 'X-ray', y: 'Yankee', z: 'Zulu', '0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four', '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine' };
+function nato() {
+  const s = $('nato-in').value; const out = $('nato-out');
+  if (!s) { out.innerHTML = ''; return; }
+  out.innerHTML = kv('Phonetic', esc([...s].map(c => NATO[c.toLowerCase()] || (c === ' ' ? '(space)' : c)).join(' ')), true);
+}
+$('nato-in').addEventListener('input', nato); nato();
+
+// ── Morse code ──
+const MORSE = { a: '.-', b: '-...', c: '-.-.', d: '-..', e: '.', f: '..-.', g: '--.', h: '....', i: '..', j: '.---', k: '-.-', l: '.-..', m: '--', n: '-.', o: '---', p: '.--.', q: '--.-', r: '.-.', s: '...', t: '-', u: '..-', v: '...-', w: '.--', x: '-..-', y: '-.--', z: '--..', '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--', '?': '..--..', '/': '-..-.', '@': '.--.-.', '-': '-....-', '=': '-...-', '+': '.-.-.', "'": '.----.', '!': '-.-.--', '(': '-.--.', ')': '-.--.-', ':': '---...' };
+const MORSE_REV = Object.fromEntries(Object.entries(MORSE).map(([k, v]) => [v, k]));
+const morseEnc = s => [...s.toLowerCase()].map(c => c === ' ' ? '/' : MORSE[c] || '').filter(x => x !== '').join(' ');
+const morseDec = s => s.trim().split(/\s+/).map(t => t === '/' ? ' ' : MORSE_REV[t] || '').join('').replace(/\s+/g, ' ');
+document.querySelectorAll('[data-morse]').forEach(b => b.addEventListener('click', () => { $('morse-out').value = b.dataset.morse === 'enc' ? morseEnc($('morse-in').value) : morseDec($('morse-in').value); }));
+function playMorse(code) {
+  const Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx || !code) return;
+  const ctx = new Ctx(); let t = ctx.currentTime + 0.05; const u = 0.08;
+  const beep = d => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 600; o.connect(g); g.connect(ctx.destination); g.gain.setValueAtTime(0.18, t); o.start(t); t += d; o.stop(t); g.gain.setValueAtTime(0, t); };
+  for (const ch of code) { if (ch === '.') { beep(u); t += u; } else if (ch === '-') { beep(u * 3); t += u; } else if (ch === ' ') t += u * 2; else if (ch === '/') t += u * 4; }
+  setTimeout(() => ctx.close(), (t - ctx.currentTime) * 1000 + 300);
+}
+$('morse-play').addEventListener('click', () => playMorse($('morse-out').value || morseEnc($('morse-in').value)));
+
+// ── UUID / ULID inspector ──
+const CROCK = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function genUlid() {
+  let t = Date.now(), ts = '';
+  for (let i = 0; i < 10; i++) { ts = CROCK[t % 32] + ts; t = Math.floor(t / 32); }
+  const r = crypto.getRandomValues(new Uint8Array(16)); let rnd = '';
+  for (let i = 0; i < 16; i++) rnd += CROCK[r[i] % 32];
+  return ts + rnd;
+}
+function inspectId() {
+  const v = $('uuid-in').value.trim(); const out = $('uuid-out'); if (!v) { out.innerHTML = ''; return; }
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v)) {
+    const hex = v.replace(/-/g, '').toLowerCase(); const ver = parseInt(hex[12], 16); const vb = parseInt(hex[16], 16);
+    const variant = vb < 8 ? 'NCS (legacy)' : vb < 12 ? 'RFC 4122' : vb < 14 ? 'Microsoft' : 'reserved';
+    let rows = kv('Type', 'UUID', true) + kv('Version', ver) + kv('Variant', variant);
+    if (ver === 1) { const intervals = BigInt('0x' + hex.slice(13, 16) + hex.slice(8, 12) + hex.slice(0, 8)); rows += kv('Timestamp', new Date(Number(intervals / 10000n) - 12219292800000).toISOString(), true); }
+    if (ver === 7) rows += kv('Timestamp', new Date(parseInt(hex.slice(0, 12), 16)).toISOString(), true);
+    out.innerHTML = rows;
+  } else if (/^[0-9ABCDEFGHJKMNPQRSTVWXYZ]{26}$/i.test(v)) {
+    let ms = 0; for (const c of v.toUpperCase().slice(0, 10)) ms = ms * 32 + CROCK.indexOf(c);
+    out.innerHTML = kv('Type', 'ULID', true) + kv('Timestamp', new Date(ms).toISOString(), true) + kv('Randomness', v.slice(10));
+  } else out.innerHTML = '<div class="err">Not a valid UUID or ULID</div>';
+}
+$('uuid-in').addEventListener('input', inspectId);
+$('uuid-gen').addEventListener('click', () => { $('uuid-in').value = crypto.randomUUID(); inspectId(); });
+$('ulid-gen').addEventListener('click', () => { $('uuid-in').value = genUlid(); inspectId(); });
+
+// ── Aspect ratio ──
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+function arScale() { const w = parseFloat($('ar-w').value), h = parseFloat($('ar-h').value), sw = parseFloat($('ar-sw').value); if (w > 0 && h > 0 && sw > 0) $('ar-sh').value = (+(sw * h / w).toFixed(2)).toString(); }
+function aspect() {
+  const w = parseFloat($('ar-w').value), h = parseFloat($('ar-h').value); const out = $('ar-out');
+  if (!(w > 0 && h > 0)) { out.innerHTML = '<div class="err">Enter width and height</div>'; return; }
+  const g = gcd(Math.round(w), Math.round(h)) || 1;
+  out.innerHTML = kv('Ratio', `${Math.round(w) / g} : ${Math.round(h) / g}`, true) + kv('Decimal', (w / h).toFixed(4)) + kv('Megapixels', (w * h / 1e6).toFixed(2));
+  arScale();
+}
+['ar-w', 'ar-h'].forEach(id => $(id).addEventListener('input', aspect));
+$('ar-sw').addEventListener('input', arScale); aspect();
+
 // ── scroll reveal + hero CTA ──
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
