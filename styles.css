@@ -166,6 +166,25 @@ input.short { max-width: 110px; }
 .di-add { background: rgba(52,211,153,0.14); color: var(--green); }
 .di-del { background: rgba(248,113,113,0.14); color: var(--red); }
 @media (max-width: 640px) { .diff-cols { flex-direction: column; } }
+input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+.chmod { border-collapse: collapse; margin: 6px 0 14px; }
+.chmod th, .chmod td { padding: 7px 18px; text-align: center; font-size: 13px; }
+.chmod th { color: var(--faint); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; font-size: 11px; }
+.chmod th:first-child, .chmod td:first-child { text-align: left; color: var(--dim); }
+.ct-preview { display: flex; align-items: center; justify-content: center; min-height: 96px; border-radius: 12px; border: 1px solid var(--border); font-size: 22px; font-weight: 600; margin: 6px 0; }
+.md-cols { display: flex; gap: 12px; align-items: stretch; }
+.md-cols textarea { flex: 1; min-width: 0; }
+.md-prev { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px 18px; overflow: auto; max-height: 440px; }
+.md-prev h1, .md-prev h2, .md-prev h3, .md-prev h4 { font-family: var(--display); margin: 16px 0 8px; letter-spacing: -0.4px; }
+.md-prev h1 { font-size: 25px; } .md-prev h2 { font-size: 20px; } .md-prev h3 { font-size: 17px; }
+.md-prev p { margin: 9px 0; } .md-prev ul { margin: 9px 0 9px 20px; } .md-prev li { margin: 3px 0; }
+.md-prev code { background: var(--surface2); padding: 1px 5px; border-radius: 4px; font-family: var(--mono); font-size: 12.5px; }
+.md-prev pre { background: var(--surface2); padding: 12px 14px; border-radius: 8px; overflow: auto; margin: 9px 0; }
+.md-prev pre code { background: none; padding: 0; }
+.md-prev blockquote { border-left: 3px solid var(--accent); margin: 9px 0; padding: 2px 14px; color: var(--dim); }
+.md-prev a { color: var(--accent); }
+.md-prev hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+@media (max-width: 640px) { .md-cols { flex-direction: column; } }
 
 #toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--grad); color: var(--btn-text); font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 22px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; box-shadow: 0 8px 24px -8px rgba(99,102,241,0.55); }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

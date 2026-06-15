@@ -450,6 +450,184 @@ function loremGen() {
 }
 $('lorem-go').addEventListener('click', loremGen); loremGen();
 
+// ── MAC formatter ──
+function macParse(s) { const h = s.replace(/[^0-9a-fA-F]/g, ''); return h.length === 12 ? h.toLowerCase() : null; }
+function eui64(h) {
+  const first = (parseInt(h.slice(0, 2), 16) ^ 0x02).toString(16).padStart(2, '0');
+  return (first + h.slice(2, 6) + 'fffe' + h.slice(6, 12)).match(/..../g).join(':');
+}
+function mac() {
+  const out = $('mac-out'); const h = macParse($('mac-in').value);
+  if (!h) { out.innerHTML = '<div class="err">Enter 12 hex digits, e.g. 00:1a:2b:3c:4d:5e</div>'; return; }
+  const p = h.match(/../g);
+  out.innerHTML = kv('Colon', p.join(':'), true) + kv('Hyphen', p.join('-')) + kv('Cisco dotted', h.match(/..../g).join('.')) +
+    kv('Bare', h) + kv('Uppercase', p.join(':').toUpperCase()) + kv('EUI-64', eui64(h), true);
+}
+$('mac-in').addEventListener('input', mac); mac();
+
+// ── CIDR / IP range ──
+function rangeToCidr(a, b) {
+  const cidrs = []; let start = a;
+  while (start <= b && cidrs.length < 256) {
+    let size = 32;
+    while (size > 0) {
+      const bits = 32 - (size - 1); const mask = bits >= 32 ? 0 : (0xFFFFFFFF << bits) >>> 0;
+      if (((start & mask) >>> 0) !== start) break;
+      if (start + Math.pow(2, bits) - 1 > b) break;
+      size--;
+    }
+    cidrs.push(intToIp(start) + '/' + size); start += Math.pow(2, 32 - size);
+  }
+  return cidrs;
+}
+function rangeTool() {
+  const v = $('range-in').value.trim(); const out = $('range-out');
+  if (v.includes('/')) {
+    const [ipStr, pfx] = v.split('/'); const ip = ipToInt(ipStr.trim()); const prefix = +pfx;
+    if (ip === null || !(prefix >= 0 && prefix <= 32)) { out.innerHTML = '<div class="err">Invalid CIDR, e.g. 10.0.0.0/24</div>'; return; }
+    const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0; const net = (ip & mask) >>> 0; const bc = (net | (~mask >>> 0)) >>> 0;
+    out.innerHTML = kv('First address', intToIp(net), true) + kv('Last address', intToIp(bc), true) + kv('Total addresses', Math.pow(2, 32 - prefix).toLocaleString());
+  } else if (v.includes('-')) {
+    const [a, b] = v.split('-').map(x => ipToInt(x.trim()));
+    if (a === null || b === null || a > b) { out.innerHTML = '<div class="err">Invalid range, e.g. 10.0.0.0 - 10.0.0.50</div>'; return; }
+    const cidrs = rangeToCidr(a, b);
+    out.innerHTML = kv('Addresses', (b - a + 1).toLocaleString(), true) + kv('CIDR blocks', cidrs.length) + cidrs.map(c => kv('', c, true)).join('');
+  } else { out.innerHTML = '<div class="err">Enter a CIDR (10.0.0.0/24) or a range (10.0.0.0 - 10.0.0.50)</div>'; }
+}
+$('range-in').addEventListener('input', rangeTool); rangeTool();
+
+// ── chmod calculator ──
+const CHMOD_ROLES = [['u', 'Owner'], ['g', 'Group'], ['o', 'Other']];
+const CHMOD_PERMS = [['r', 4], ['w', 2], ['x', 1]];
+function chmodFromBoxes() {
+  let oct = '', sym = '';
+  for (const [rk] of CHMOD_ROLES) { let v = 0; for (const [pk, pv] of CHMOD_PERMS) { if ($('cm-' + rk + pk).checked) { v += pv; sym += pk; } else sym += '-'; } oct += v; }
+  $('chmod-oct').value = oct;
+  $('chmod-out').innerHTML = kv('Octal', oct, true) + kv('Symbolic', sym, true);
+}
+function chmodFromOct() {
+  const v = $('chmod-oct').value.trim();
+  if (!/^[0-7]{3}$/.test(v)) { $('chmod-out').innerHTML = '<div class="err">Enter 3 octal digits, e.g. 755</div>'; return; }
+  CHMOD_ROLES.forEach(([rk], i) => { const d = +v[i]; CHMOD_PERMS.forEach(([pk, pv]) => { $('cm-' + rk + pk).checked = (d & pv) !== 0; }); });
+  chmodFromBoxes();
+}
+(function chmodBuild() {
+  let html = '<table class="chmod"><tr><th></th><th>read</th><th>write</th><th>exec</th></tr>';
+  for (const [rk, rn] of CHMOD_ROLES) { html += `<tr><td>${rn}</td>`; for (const [pk] of CHMOD_PERMS) html += `<td><input type="checkbox" id="cm-${rk}${pk}"></td>`; html += '</tr>'; }
+  $('chmod-grid').innerHTML = html + '</table>';
+  CHMOD_ROLES.forEach(([rk]) => CHMOD_PERMS.forEach(([pk]) => $('cm-' + rk + pk).addEventListener('change', chmodFromBoxes)));
+  $('chmod-oct').addEventListener('input', chmodFromOct); chmodFromOct();
+})();
+
+// ── Colour contrast ──
+function relLum([r, g, b]) { const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); }
+function contrast() {
+  const fg = hexToRgb($('ct-fg').value.trim()), bg = hexToRgb($('ct-bg').value.trim()); const out = $('ct-out');
+  if (!fg || !bg) { out.innerHTML = '<div class="err">Enter two hex colours, e.g. #ffffff and #1a1a1a</div>'; return; }
+  $('ct-preview').style.background = $('ct-bg').value; $('ct-preview').style.color = $('ct-fg').value;
+  const L1 = relLum(fg), L2 = relLum(bg); const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+  const p = t => ratio >= t ? 'pass' : 'fail';
+  out.innerHTML = kv('Contrast ratio', ratio.toFixed(2) + ' : 1', true) + kv('AA normal text (4.5)', p(4.5), ratio >= 4.5) +
+    kv('AA large text (3)', p(3), ratio >= 3) + kv('AAA normal text (7)', p(7), ratio >= 7) + kv('AAA large text (4.5)', p(4.5), ratio >= 4.5);
+}
+['ct-fg', 'ct-bg'].forEach(id => $(id).addEventListener('input', contrast)); contrast();
+
+// ── CSS units ──
+const r4 = n => (+n.toFixed(4)).toString();
+function cssunit() {
+  const v = parseFloat($('cu-val').value); const unit = $('cu-unit').value; const base = parseFloat($('cu-base').value) || 16; const out = $('cu-out');
+  if (!isFinite(v)) { out.innerHTML = ''; return; }
+  let px; if (unit === 'px') px = v; else if (unit === 'rem' || unit === 'em') px = v * base; else px = v * 96 / 72;
+  out.innerHTML = kv('px', r4(px), true) + kv('rem', r4(px / base), true) + kv('em', r4(px / base)) + kv('pt', r4(px * 72 / 96));
+}
+['cu-val', 'cu-base'].forEach(id => $(id).addEventListener('input', cssunit)); $('cu-unit').addEventListener('change', cssunit); cssunit();
+
+// ── Duration ──
+function durFmt(sec) { sec = Math.floor(sec); const d = Math.floor(sec / 86400); sec %= 86400; const h = Math.floor(sec / 3600); sec %= 3600; const m = Math.floor(sec / 60); const s = sec % 60; return [d && d + 'd', h && h + 'h', m && m + 'm', s && s + 's'].filter(Boolean).join(' ') || '0s'; }
+function durParse(str) { const re = /(\d+(?:\.\d+)?)\s*(d|h|m|s)/gi; const mult = { d: 86400, h: 3600, m: 60, s: 1 }; let m, total = 0, any = false; while ((m = re.exec(str))) { any = true; total += parseFloat(m[1]) * mult[m[2].toLowerCase()]; } return any ? total : null; }
+function dur() {
+  const v = $('dur-in').value.trim(); const out = $('dur-out'); if (!v) { out.innerHTML = ''; return; }
+  let secs = /^\d+(\.\d+)?$/.test(v) ? parseFloat(v) : durParse(v);
+  if (secs === null || !isFinite(secs)) { out.innerHTML = '<div class="err">Enter seconds (90061) or a duration (1d 2h 3m)</div>'; return; }
+  out.innerHTML = kv('Human', durFmt(secs), true) + kv('Seconds', secs.toLocaleString()) + kv('Minutes', r4(secs / 60)) + kv('Hours', r4(secs / 3600)) + kv('Days', r4(secs / 86400));
+}
+$('dur-in').addEventListener('input', dur); dur();
+
+// ── Base32 (shared decoder used by TOTP) ──
+const B32_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Decode(s) {
+  s = s.replace(/=+$/, '').replace(/\s/g, '').toUpperCase(); let bits = 0, val = 0; const out = [];
+  for (const c of s) { const idx = B32_ALPHA.indexOf(c); if (idx < 0) throw new Error('Invalid Base32 character'); val = (val << 5) | idx; bits += 5; if (bits >= 8) { out.push((val >>> (bits - 8)) & 0xff); bits -= 8; } }
+  return new Uint8Array(out);
+}
+function base32Encode(bytes) {
+  let bits = 0, val = 0, out = '';
+  for (const b of bytes) { val = (val << 8) | b; bits += 8; while (bits >= 5) { out += B32_ALPHA[(val >>> (bits - 5)) & 31]; bits -= 5; } }
+  if (bits > 0) out += B32_ALPHA[(val << (5 - bits)) & 31];
+  while (out.length % 8) out += '=';
+  return out;
+}
+document.querySelectorAll('[data-b32]').forEach(b => b.addEventListener('click', () => {
+  const s = $('b32-in').value; let r = '';
+  try { r = b.dataset.b32 === 'enc' ? base32Encode(new TextEncoder().encode(s)) : new TextDecoder().decode(base32Decode(s)); } catch (e) { r = 'Error: ' + e.message; }
+  $('b32-out').value = r;
+}));
+
+// ── TOTP / 2FA ──
+async function totpCode(secret, step = 30, digits = 6) {
+  const key = base32Decode(secret); if (!key.length) throw new Error('empty secret');
+  const t = Math.floor(Date.now() / 1000 / step); const msg = new Uint8Array(8); let x = t;
+  for (let i = 7; i >= 0; i--) { msg[i] = x & 0xff; x = Math.floor(x / 256); }
+  const ck = await crypto.subtle.importKey('raw', key, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', ck, msg));
+  const off = h[h.length - 1] & 0xf;
+  const bin = ((h[off] & 0x7f) << 24) | ((h[off + 1] & 0xff) << 16) | ((h[off + 2] & 0xff) << 8) | (h[off + 3] & 0xff);
+  return (bin % Math.pow(10, digits)).toString().padStart(digits, '0');
+}
+async function totp() {
+  const out = $('totp-out'); const secret = $('totp-in').value.trim(); if (!secret) { out.innerHTML = ''; return; }
+  try { const code = await totpCode(secret); const left = 30 - Math.floor(Date.now() / 1000) % 30; out.innerHTML = kv('Code', code.replace(/(\d{3})(\d{3})/, '$1 $2'), true) + kv('Expires in', left + 's'); }
+  catch (e) { out.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+$('totp-in').addEventListener('input', totp);
+setInterval(() => { if ($('totp-in').value.trim()) totp(); }, 1000); totp();
+
+// ── String escape / unescape ──
+function strEsc(s, t) { if (t === 'Shell') return "'" + s.replace(/'/g, "'\\''") + "'"; return JSON.stringify(s); }
+function strUnesc(s, t) {
+  if (t === 'Shell') { let x = s.trim(); if (x.startsWith("'") && x.endsWith("'")) x = x.slice(1, -1); return x.replace(/'\\''/g, "'"); }
+  let x = s.trim(); if (!x.startsWith('"')) x = '"' + x + '"'; return JSON.parse(x);
+}
+document.querySelectorAll('[data-esc]').forEach(b => b.addEventListener('click', () => {
+  const t = $('esc-type').value, msg = $('esc-msg');
+  try { $('esc-out').value = b.dataset.esc === 'esc' ? strEsc($('esc-in').value, t) : strUnesc($('esc-in').value, t); msg.textContent = ''; }
+  catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; }
+}));
+
+// ── Markdown preview ──
+function mdRender(src) {
+  const e = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const inline = s => e(s).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>').replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  let html = '', inList = false, inCode = false, code = '';
+  const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
+  for (const raw of src.split('\n')) {
+    if (/^```/.test(raw)) { if (inCode) { html += '<pre><code>' + e(code) + '</code></pre>'; code = ''; inCode = false; } else { closeList(); inCode = true; } continue; }
+    if (inCode) { code += raw + '\n'; continue; }
+    let m;
+    if ((m = raw.match(/^(#{1,6})\s+(.*)/))) { closeList(); html += `<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`; }
+    else if (/^\s*[-*]\s+/.test(raw)) { if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + inline(raw.replace(/^\s*[-*]\s+/, '')) + '</li>'; }
+    else if (/^>\s?/.test(raw)) { closeList(); html += '<blockquote>' + inline(raw.replace(/^>\s?/, '')) + '</blockquote>'; }
+    else if (/^(-{3,}|\*{3,})$/.test(raw.trim())) { closeList(); html += '<hr>'; }
+    else if (raw.trim() === '') { closeList(); }
+    else { closeList(); html += '<p>' + inline(raw) + '</p>'; }
+  }
+  if (inCode) html += '<pre><code>' + e(code) + '</code></pre>';
+  closeList(); return html;
+}
+function md() { $('md-out').innerHTML = mdRender($('md-in').value); }
+$('md-in').addEventListener('input', md); md();
+
 // ── scroll reveal + hero CTA ──
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
