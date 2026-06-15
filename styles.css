@@ -158,6 +158,14 @@ button.copy:hover { color: var(--text); border-color: var(--accent); filter: non
 .swatch { height: 70px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 4px; }
 .qrbox { display: flex; justify-content: center; padding: 20px; }
 .qrbox img { background: #fff; padding: 14px; border-radius: 14px; box-shadow: 0 10px 30px -12px var(--shadow); }
+input.short { max-width: 110px; }
+.diff-cols { display: flex; gap: 10px; margin-bottom: 12px; }
+.diff-cols textarea { flex: 1; min-width: 0; }
+.di { font-family: var(--mono); font-size: 12.5px; white-space: pre-wrap; word-break: break-word; padding: 1px 8px; border-radius: 4px; }
+.di-ctx { color: var(--dim); }
+.di-add { background: rgba(52,211,153,0.14); color: var(--green); }
+.di-del { background: rgba(248,113,113,0.14); color: var(--red); }
+@media (max-width: 640px) { .diff-cols { flex-direction: column; } }
 
 #toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--grad); color: var(--btn-text); font-weight: 700; font-size: 13px; padding: 10px 20px; border-radius: 22px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; box-shadow: 0 8px 24px -8px rgba(99,102,241,0.55); }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

@@ -258,6 +258,198 @@ $('qr-go').addEventListener('click', qr);
 $('qr-in').addEventListener('keydown', e => { if (e.key === 'Enter') qr(); });
 qr();
 
+// ── IPv6 expand / compress ──
+function ipv6Parse(str) {
+  let s = str.trim().split('%')[0];
+  if (!s) return null;
+  if (s.indexOf('::') !== s.lastIndexOf('::')) return null;
+  let head, tail;
+  if (s.includes('::')) { const [h, t] = s.split('::'); head = h ? h.split(':') : []; tail = t ? t.split(':') : []; }
+  else { head = s.split(':'); tail = []; }
+  const fill = 8 - head.length - tail.length;
+  if (!s.includes('::')) { if (head.length !== 8) return null; }
+  else if (fill < 1) return null;
+  const groups = [...head, ...Array(Math.max(0, fill)).fill('0'), ...tail];
+  if (groups.length !== 8) return null;
+  for (const g of groups) if (!/^[0-9a-fA-F]{1,4}$/.test(g)) return null;
+  return groups.map(g => parseInt(g, 16));
+}
+function ipv6Compress(nums) {
+  let best = { s: -1, l: 0 }, cur = { s: -1, l: 0 };
+  for (let i = 0; i < 8; i++) {
+    if (nums[i] === 0) { if (cur.s < 0) cur = { s: i, l: 1 }; else cur.l++; if (cur.l > best.l) best = { s: cur.s, l: cur.l }; }
+    else cur = { s: -1, l: 0 };
+  }
+  const p = nums.map(n => n.toString(16));
+  if (best.l > 1) return (p.slice(0, best.s).join(':')) + '::' + (p.slice(best.s + best.l).join(':'));
+  return p.join(':');
+}
+function ipv6() {
+  const out = $('ipv6-out'); const nums = ipv6Parse($('ipv6-in').value);
+  if (!nums) { out.innerHTML = '<div class="err">Enter a valid IPv6 address, e.g. 2001:db8::1</div>'; return; }
+  out.innerHTML = kv('Expanded', nums.map(n => n.toString(16).padStart(4, '0')).join(':'), true) +
+    kv('Compressed', ipv6Compress(nums), true) +
+    kv('Groups', nums.map(n => n.toString(16)).join(' : '));
+}
+$('ipv6-in').addEventListener('input', ipv6); ipv6();
+
+// ── Cron explainer ──
+const CRON_DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const CRON_MON = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function cronField(expr, lo, hi) {
+  const set = new Set();
+  for (const part of expr.split(',')) {
+    let m;
+    if (part === '*') { for (let i = lo; i <= hi; i++) set.add(i); }
+    else if ((m = part.match(/^\*\/(\d+)$/))) { const st = +m[1]; if (st < 1) throw 0; for (let i = lo; i <= hi; i += st) set.add(i); }
+    else if ((m = part.match(/^(\d+)-(\d+)(?:\/(\d+))?$/))) { const a = +m[1], b = +m[2], st = m[3] ? +m[3] : 1; if (a < lo || b > hi || a > b || st < 1) throw 0; for (let i = a; i <= b; i += st) set.add(i); }
+    else if ((m = part.match(/^(\d+)$/))) { const v = +m[1]; if (v < lo || v > hi) throw 0; set.add(v); }
+    else throw 0;
+  }
+  return set;
+}
+function cron() {
+  const out = $('cron-out'); const raw = $('cron-in').value.trim();
+  if (!raw) { out.innerHTML = ''; return; }
+  const f = raw.split(/\s+/);
+  if (f.length !== 5) { out.innerHTML = '<div class="err">Enter 5 fields: minute hour day-of-month month day-of-week</div>'; return; }
+  let min, hr, dom, mon, dow;
+  try {
+    min = cronField(f[0], 0, 59); hr = cronField(f[1], 0, 23); dom = cronField(f[2], 1, 31);
+    mon = cronField(f[3], 1, 12); dow = cronField(f[4].replace(/\b7\b/g, '0'), 0, 6);
+  } catch { out.innerHTML = '<div class="err">Could not parse - check the field values and ranges</div>'; return; }
+  const fmt = (set, size, names) => set.size === size ? 'every' : [...set].sort((a, b) => a - b).map(v => names ? names[v] : v).join(', ');
+  const domStar = f[2] === '*', dowStar = f[4] === '*';
+  const runs = []; const d = new Date(); d.setSeconds(0, 0); d.setMinutes(d.getMinutes() + 1);
+  for (let i = 0; i < 550000 && runs.length < 5; i++) {
+    const dayOk = (domStar || dowStar) ? (dom.has(d.getDate()) && dow.has(d.getDay())) : (dom.has(d.getDate()) || dow.has(d.getDay()));
+    if (min.has(d.getMinutes()) && hr.has(d.getHours()) && mon.has(d.getMonth() + 1) && dayOk) runs.push(new Date(d));
+    d.setMinutes(d.getMinutes() + 1);
+  }
+  let html = kv('Minute', fmt(min, 60), true) + kv('Hour', fmt(hr, 24), true) +
+    kv('Day of month', fmt(dom, 31)) + kv('Month', fmt(mon, 12, CRON_MON)) + kv('Day of week', fmt(dow, 7, CRON_DOW));
+  html += runs.length ? runs.map((r, i) => kv(i === 0 ? 'Next run' : 'then', r.toLocaleString(), i === 0)).join('') : kv('Next runs', 'none within ~1 year');
+  out.innerHTML = html;
+}
+let cronT; $('cron-in').addEventListener('input', () => { clearTimeout(cronT); cronT = setTimeout(cron, 200); }); cron();
+
+// ── HMAC ──
+async function hmac() {
+  const out = $('hmac-out'); const key = $('hmac-key').value, msg = $('hmac-in').value, alg = $('hmac-alg').value;
+  if (!key || !msg) { out.innerHTML = ''; return; }
+  try {
+    const enc = new TextEncoder();
+    const ck = await crypto.subtle.importKey('raw', enc.encode(key), { name: 'HMAC', hash: alg }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', ck, enc.encode(msg));
+    out.innerHTML = kv('HMAC ' + alg, [...new Uint8Array(sig)].map(x => x.toString(16).padStart(2, '0')).join(''), true);
+  } catch (e) { out.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+['hmac-key', 'hmac-in'].forEach(id => $(id).addEventListener('input', hmac));
+$('hmac-alg').addEventListener('change', hmac);
+
+// ── Hex / text ──
+function hexConv(op) {
+  const s = $('hex-in').value; let r = '';
+  try {
+    if (op === 'tohex') r = [...new TextEncoder().encode(s)].map(x => x.toString(16).padStart(2, '0')).join(' ');
+    else if (op === 'totext') {
+      const hx = s.replace(/[^0-9a-fA-F]/g, ''); if (hx.length % 2) throw new Error('Odd number of hex digits');
+      r = new TextDecoder().decode(new Uint8Array((hx.match(/../g) || []).map(h => parseInt(h, 16))));
+    } else {
+      const bytes = [...new TextEncoder().encode(s)]; const lines = [];
+      for (let i = 0; i < bytes.length; i += 16) {
+        const ch = bytes.slice(i, i + 16);
+        const hp = ch.map(x => x.toString(16).padStart(2, '0')).join(' ').padEnd(47, ' ');
+        const as = ch.map(x => x >= 32 && x < 127 ? String.fromCharCode(x) : '.').join('');
+        lines.push(i.toString(16).padStart(8, '0') + '  ' + hp + '  ' + as);
+      }
+      r = lines.join('\n');
+    }
+  } catch (e) { r = 'Error: ' + e.message; }
+  $('hex-out').value = r;
+}
+document.querySelectorAll('[data-hex]').forEach(b => b.addEventListener('click', () => hexConv(b.dataset.hex)));
+
+// ── HTML entities ──
+function htmlEnc(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    .replace(/[ -￿]/g, c => '&#' + c.charCodeAt(0) + ';');
+}
+function htmlDec(s) { const t = document.createElement('textarea'); t.innerHTML = s; return t.value; }
+document.querySelectorAll('[data-html]').forEach(b => b.addEventListener('click', () => {
+  $('html-out').value = b.dataset.html === 'enc' ? htmlEnc($('html-in').value) : htmlDec($('html-in').value);
+}));
+
+// ── CSV / JSON ──
+function parseCSV(text) {
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cur); cur = ''; }
+    else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+    else if (c !== '\r') cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+function csvToJson(text) {
+  const rows = parseCSV(text.trim()); if (!rows.length) return '[]';
+  const h = rows[0];
+  return JSON.stringify(rows.slice(1).map(r => { const o = {}; h.forEach((k, i) => o[k] = r[i] ?? ''); return o; }), null, 2);
+}
+function jsonToCsv(text) {
+  const data = JSON.parse(text); if (!Array.isArray(data)) throw new Error('JSON must be an array of objects');
+  const headers = [...new Set(data.flatMap(o => Object.keys(o)))];
+  const cell = v => { v = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  return [headers.map(cell).join(','), ...data.map(o => headers.map(h => cell(o[h])).join(','))].join('\n');
+}
+document.querySelectorAll('[data-csv]').forEach(b => b.addEventListener('click', () => {
+  const msg = $('csv-msg');
+  try { $('csv-out').value = b.dataset.csv === 'tojson' ? csvToJson($('csv-in').value) : jsonToCsv($('csv-in').value); msg.className = 'msg ok'; msg.textContent = 'converted'; }
+  catch (e) { msg.className = 'msg bad'; msg.textContent = e.message; }
+}));
+
+// ── Text diff (LCS line diff) ──
+function lineDiff() {
+  const A = $('diff-a').value.split('\n'), B = $('diff-b').value.split('\n'); const out = $('diff-out');
+  const m = A.length, n = B.length;
+  if (m + n > 4000) { out.innerHTML = '<div class="err">Too large to diff - keep each side under ~2000 lines</div>'; $('diff-msg').textContent = ''; return; }
+  const dp = Array.from({ length: m + 1 }, () => new Int32Array(n + 1));
+  for (let i = m - 1; i >= 0; i--) for (let j = n - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const line = (cls, sign, t) => `<div class="di ${cls}">${sign} ${esc(t) || '&nbsp;'}</div>`;
+  let i = 0, j = 0, html = '', add = 0, del = 0;
+  while (i < m && j < n) {
+    if (A[i] === B[j]) { html += line('di-ctx', ' ', A[i]); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { html += line('di-del', '-', A[i]); i++; del++; }
+    else { html += line('di-add', '+', B[j]); j++; add++; }
+  }
+  while (i < m) { html += line('di-del', '-', A[i++]); del++; }
+  while (j < n) { html += line('di-add', '+', B[j++]); add++; }
+  $('diff-msg').className = 'msg'; $('diff-msg').textContent = `${add} added · ${del} removed`;
+  out.innerHTML = html || '<div class="di di-ctx">(identical)</div>';
+}
+['diff-a', 'diff-b'].forEach(id => $(id).addEventListener('input', lineDiff));
+
+// ── Lorem ipsum ──
+const LOREM = 'lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum'.split(' ');
+const lrand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function loremSentence() {
+  const w = []; const len = lrand(6, 14);
+  for (let i = 0; i < len; i++) w.push(LOREM[lrand(0, LOREM.length - 1)]);
+  return w.join(' ').replace(/^\w/, c => c.toUpperCase()) + '.';
+}
+function loremGen() {
+  const n = Math.max(1, Math.min(50, +$('lorem-n').value || 1)); const type = $('lorem-type').value;
+  let r;
+  if (type === 'words') r = Array.from({ length: n }, () => LOREM[lrand(0, LOREM.length - 1)]).join(' ');
+  else if (type === 'sentences') r = Array.from({ length: n }, loremSentence).join(' ');
+  else r = Array.from({ length: n }, () => Array.from({ length: lrand(3, 6) }, loremSentence).join(' ')).join('\n\n');
+  $('lorem-out').value = r;
+}
+$('lorem-go').addEventListener('click', loremGen); loremGen();
+
 // ── scroll reveal + hero CTA ──
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
