@@ -59,7 +59,7 @@ async function iplookup() {
   const q = $('ipq').value.trim();
   const out = $('ip-out'); out.innerHTML = '<div class="kv"><span class="k">Looking up…</span></div>';
   try {
-    const r = await fetch(q ? `https://ipwho.is/${encodeURIComponent(q)}` : 'https://ipwho.is/');
+    const r = await fetch(`/api/ip${q ? '?q=' + encodeURIComponent(q) : ''}`);
     const d = await r.json();
     if (!d.success) throw new Error(d.message || 'lookup failed');
     const c = d.connection || {};
