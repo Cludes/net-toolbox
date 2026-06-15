@@ -68,10 +68,9 @@ html.js .reveal.in { opacity: 1; transform: none; transition: opacity .7s cubic-
 #back:hover { border-color: var(--accent); filter: none; }
 #filter { margin-left: auto; max-width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); padding: 9px 13px; font-size: 13px; outline: none; font-family: var(--font); transition: border-color .15s, box-shadow .15s; }
 #filter:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
-#back + #filter { margin-left: 0; }
+#filter.hidden ~ #theme { margin-left: auto; }
 .iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--dim); cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
 .iconbtn:hover { color: var(--text); border-color: var(--accent); }
-#back.hidden + #filter { margin-left: auto; }
 
 /* main */
 #main { max-width: 980px; margin: 0 auto; padding: 30px 24px 90px; }
