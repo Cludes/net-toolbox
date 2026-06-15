@@ -257,3 +257,10 @@ function qr() { const v = $('qr-in').value.trim(); const out = $('qr-out'); if (
 $('qr-go').addEventListener('click', qr);
 $('qr-in').addEventListener('keydown', e => { if (e.key === 'Enter') qr(); });
 qr();
+
+// ── scroll reveal + hero CTA ──
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = Math.min(i * 30, 220) + 'ms'; io.observe(el); });
+$('cta') && $('cta').addEventListener('click', () => document.querySelector('.group').scrollIntoView({ behavior: 'smooth', block: 'start' }));

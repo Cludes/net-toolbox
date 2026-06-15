@@ -6,7 +6,11 @@
   <meta name="description" content="A fast, modern toolbox for network and dev work: subnet, IP/ASN, DNS, converters, hashing, JWT, JSON, regex, generators and more." />
   <title>Net Toolbox</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-  <meta name="theme-color" content="#0a0b10" />
+  <meta name="theme-color" content="#08090e" />
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -18,52 +22,53 @@
 
   <main id="main">
     <section id="p-home" class="panel on">
-      <div class="hero">
-        <div class="hero-inner">
-          <h1 class="hero-title">Net&nbsp;Toolbox</h1>
-          <p class="hero-sub">A fast, private toolbox for everyday network &amp; dev work - pick a tool to get started.</p>
-        </div>
+      <div class="hero reveal">
+        <div class="hero-glow"></div>
+        <div class="eyebrow">Developer &amp; network utilities</div>
+        <h1 class="hero-title">Every tool you reach for, in one fast tab.</h1>
+        <p class="hero-sub">Subnet maths, DNS, hashing, JWTs, encoders, converters and generators. Private, instant, and running entirely in your browser.</p>
+        <button class="cta" id="cta">Browse the toolkit <span class="arr">↓</span></button>
       </div>
 
       <div class="group">
         <div class="cat">Network</div>
         <div class="cards">
-          <button class="card" data-go="p-subnet"><span class="card-t">Subnet / CIDR</span><span class="card-d">network, broadcast, hosts, wildcard</span></button>
-          <button class="card" data-go="p-ip"><span class="card-t">IP / ASN lookup</span><span class="card-d">ASN, org &amp; geo for any IP</span></button>
-          <button class="card" data-go="p-dns"><span class="card-t">DNS lookup</span><span class="card-d">A / AAAA / MX / TXT / NS records</span></button>
+          <button class="card reveal" data-go="p-subnet"><span class="card-t">Subnet / CIDR</span><span class="card-d">network, broadcast, hosts, wildcard</span></button>
+          <button class="card reveal" data-go="p-ip"><span class="card-t">IP / ASN lookup</span><span class="card-d">ASN, org &amp; geo for any IP</span></button>
+          <button class="card reveal" data-go="p-dns"><span class="card-t">DNS lookup</span><span class="card-d">A / AAAA / MX / TXT / NS records</span></button>
         </div>
       </div>
       <div class="group">
         <div class="cat">Convert</div>
         <div class="cards">
-          <button class="card" data-go="p-base"><span class="card-t">Base / radix</span><span class="card-d">dec ↔ hex ↔ bin ↔ oct</span></button>
-          <button class="card" data-go="p-time"><span class="card-t">Timestamp</span><span class="card-d">epoch ↔ date, live clock</span></button>
-          <button class="card" data-go="p-color"><span class="card-t">Color</span><span class="card-d">hex ↔ rgb ↔ hsl + swatch</span></button>
-          <button class="card" data-go="p-size"><span class="card-t">Data size</span><span class="card-d">bytes ↔ KB / MB / GiB</span></button>
+          <button class="card reveal" data-go="p-base"><span class="card-t">Base / radix</span><span class="card-d">dec ↔ hex ↔ bin ↔ oct</span></button>
+          <button class="card reveal" data-go="p-time"><span class="card-t">Timestamp</span><span class="card-d">epoch ↔ date, live clock</span></button>
+          <button class="card reveal" data-go="p-color"><span class="card-t">Color</span><span class="card-d">hex ↔ rgb ↔ hsl + swatch</span></button>
+          <button class="card reveal" data-go="p-size"><span class="card-t">Data size</span><span class="card-d">bytes ↔ KB / MB / GiB</span></button>
         </div>
       </div>
       <div class="group">
         <div class="cat">Encode &amp; hash</div>
         <div class="cards">
-          <button class="card" data-go="p-encode"><span class="card-t">Base64 / URL</span><span class="card-d">encode &amp; decode</span></button>
-          <button class="card" data-go="p-hash"><span class="card-t">Hash</span><span class="card-d">SHA-1 / 256 / 384 / 512</span></button>
-          <button class="card" data-go="p-jwt"><span class="card-t">JWT decoder</span><span class="card-d">header, payload, claims</span></button>
+          <button class="card reveal" data-go="p-encode"><span class="card-t">Base64 / URL</span><span class="card-d">encode &amp; decode</span></button>
+          <button class="card reveal" data-go="p-hash"><span class="card-t">Hash</span><span class="card-d">SHA-1 / 256 / 384 / 512</span></button>
+          <button class="card reveal" data-go="p-jwt"><span class="card-t">JWT decoder</span><span class="card-d">header, payload, claims</span></button>
         </div>
       </div>
       <div class="group">
         <div class="cat">Format</div>
         <div class="cards">
-          <button class="card" data-go="p-json"><span class="card-t">JSON</span><span class="card-d">pretty, minify, validate</span></button>
-          <button class="card" data-go="p-regex"><span class="card-t">Regex</span><span class="card-d">live match highlighting</span></button>
-          <button class="card" data-go="p-url"><span class="card-t">URL parser</span><span class="card-d">parts + query params</span></button>
-          <button class="card" data-go="p-text"><span class="card-t">Text tools</span><span class="card-d">case, slug, sort, dedupe</span></button>
+          <button class="card reveal" data-go="p-json"><span class="card-t">JSON</span><span class="card-d">pretty, minify, validate</span></button>
+          <button class="card reveal" data-go="p-regex"><span class="card-t">Regex</span><span class="card-d">live match highlighting</span></button>
+          <button class="card reveal" data-go="p-url"><span class="card-t">URL parser</span><span class="card-d">parts + query params</span></button>
+          <button class="card reveal" data-go="p-text"><span class="card-t">Text tools</span><span class="card-d">case, slug, sort, dedupe</span></button>
         </div>
       </div>
       <div class="group">
         <div class="cat">Generate</div>
         <div class="cards">
-          <button class="card" data-go="p-gen"><span class="card-t">Generators</span><span class="card-d">UUID, password, hex</span></button>
-          <button class="card" data-go="p-qr"><span class="card-t">QR code</span><span class="card-d">text / URL → QR</span></button>
+          <button class="card reveal" data-go="p-gen"><span class="card-t">Generators</span><span class="card-d">UUID, password, hex</span></button>
+          <button class="card reveal" data-go="p-qr"><span class="card-t">QR code</span><span class="card-d">text / URL → QR</span></button>
         </div>
       </div>
     </section>
