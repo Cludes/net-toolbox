@@ -74,8 +74,32 @@ button.copy:hover { color: var(--text); border-color: var(--accent2); filter: no
 #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--accent); color: #06140c; font-weight: 700; font-size: 13px; padding: 9px 18px; border-radius: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* brand button */
+#brand { background: none; border: none; color: var(--text); font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 8px; padding: 6px 8px; margin-bottom: 10px; cursor: pointer; width: 100%; font-family: var(--font); border-radius: 8px; }
+#brand:hover { background: rgba(255,255,255,0.04); filter: none; }
+
+/* hero */
+.hero { position: relative; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; padding: 46px 34px; margin-bottom: 22px;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(74,222,128,0.16), transparent 55%), radial-gradient(120% 150% at 100% 0%, rgba(56,189,248,0.16), transparent 55%), var(--panel2); }
+.hero-grid { position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size: 26px 26px; -webkit-mask-image: radial-gradient(120% 120% at 50% 0%, #000, transparent 72%); mask-image: radial-gradient(120% 120% at 50% 0%, #000, transparent 72%); }
+.hero-inner { position: relative; }
+.hero-title { font-size: 40px; font-weight: 900; letter-spacing: -1.2px; line-height: 1; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-sub { color: var(--dim); font-size: 14.5px; max-width: 540px; margin: 10px 0 16px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { font-size: 11px; font-weight: 700; color: var(--accent); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 20px; padding: 4px 12px; }
+
+/* tool cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; cursor: pointer; font-family: var(--font); transition: border-color 0.15s, transform 0.1s, background 0.15s; }
+.card:hover { border-color: var(--accent2); transform: translateY(-2px); background: #141b17; filter: none; }
+.card-t { font-size: 14px; font-weight: 700; color: var(--text); }
+.card-d { font-size: 12px; color: var(--dim); font-weight: 400; }
+
 @media (max-width: 700px) {
   #app { flex-direction: column; }
   #nav { width: 100%; height: auto; position: static; }
   #main { padding: 20px 14px 40px; }
+  .hero { padding: 32px 22px; } .hero-title { font-size: 30px; }
 }

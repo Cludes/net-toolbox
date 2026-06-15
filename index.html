@@ -12,7 +12,7 @@
 <body>
   <div id="app">
     <aside id="nav">
-      <div class="brand"><span class="dot2"></span> Net&nbsp;Toolbox</div>
+      <button id="brand" class="brand"><span class="dot2"></span> Net&nbsp;Toolbox</button>
       <input id="filter" placeholder="Filter tools…" spellcheck="false" />
 
       <div class="cat">Network</div>
@@ -43,7 +43,41 @@
     </aside>
 
     <main id="main">
-      <section id="p-subnet" class="panel on">
+      <section id="p-home" class="panel on">
+        <div class="hero">
+          <div class="hero-grid"></div>
+          <div class="hero-inner">
+            <h1 class="hero-title">Net&nbsp;Toolbox</h1>
+            <p class="hero-sub">A fast, private toolbox for network &amp; dev work. 16 tools, no sign-up, no tracking — everything runs in your browser.</p>
+            <div class="pills">
+              <span class="pill">16 tools</span>
+              <span class="pill">keyless</span>
+              <span class="pill">client-side</span>
+              <span class="pill">no tracking</span>
+            </div>
+          </div>
+        </div>
+        <div class="cards">
+          <button class="card" data-go="p-subnet"><span class="card-t">Subnet / CIDR</span><span class="card-d">network, broadcast, hosts, wildcard</span></button>
+          <button class="card" data-go="p-ip"><span class="card-t">IP / ASN lookup</span><span class="card-d">ASN, org &amp; geo for any IP</span></button>
+          <button class="card" data-go="p-dns"><span class="card-t">DNS lookup</span><span class="card-d">A / AAAA / MX / TXT / NS records</span></button>
+          <button class="card" data-go="p-base"><span class="card-t">Base / radix</span><span class="card-d">dec ↔ hex ↔ bin ↔ oct</span></button>
+          <button class="card" data-go="p-time"><span class="card-t">Timestamp</span><span class="card-d">epoch ↔ date, live clock</span></button>
+          <button class="card" data-go="p-color"><span class="card-t">Color</span><span class="card-d">hex ↔ rgb ↔ hsl + swatch</span></button>
+          <button class="card" data-go="p-size"><span class="card-t">Data size</span><span class="card-d">bytes ↔ KB / MB / GiB</span></button>
+          <button class="card" data-go="p-encode"><span class="card-t">Base64 / URL</span><span class="card-d">encode &amp; decode</span></button>
+          <button class="card" data-go="p-hash"><span class="card-t">Hash</span><span class="card-d">SHA-1 / 256 / 384 / 512</span></button>
+          <button class="card" data-go="p-jwt"><span class="card-t">JWT decoder</span><span class="card-d">header, payload, claims</span></button>
+          <button class="card" data-go="p-json"><span class="card-t">JSON</span><span class="card-d">pretty, minify, validate</span></button>
+          <button class="card" data-go="p-regex"><span class="card-t">Regex</span><span class="card-d">live match highlighting</span></button>
+          <button class="card" data-go="p-url"><span class="card-t">URL parser</span><span class="card-d">parts + query params</span></button>
+          <button class="card" data-go="p-text"><span class="card-t">Text tools</span><span class="card-d">case, slug, sort, dedupe</span></button>
+          <button class="card" data-go="p-gen"><span class="card-t">Generators</span><span class="card-d">UUID, password, hex</span></button>
+          <button class="card" data-go="p-qr"><span class="card-t">QR code</span><span class="card-d">text / URL → QR</span></button>
+        </div>
+      </section>
+
+      <section id="p-subnet" class="panel">
         <h2>Subnet / CIDR calculator</h2>
         <div class="row"><input id="cidr" placeholder="192.168.1.10/24" value="192.168.1.10/24" spellcheck="false" /></div>
         <div id="subnet-out" class="out"></div>

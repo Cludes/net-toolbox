@@ -4,11 +4,14 @@ const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', 
 const kv = (k, v, hi) => `<div class="kv"><span class="k">${k}</span><span class="v ${hi ? 'hi' : ''}">${v}</span></div>`;
 
 // ── nav + filter ──
-document.querySelectorAll('.navi').forEach(n => n.addEventListener('click', () => {
-  document.querySelectorAll('.navi').forEach(x => x.classList.remove('on'));
-  document.querySelectorAll('.panel').forEach(x => x.classList.remove('on'));
-  n.classList.add('on'); $(n.dataset.p).classList.add('on');
-}));
+function activate(pid) {
+  document.querySelectorAll('.panel').forEach(x => x.classList.toggle('on', x.id === pid));
+  document.querySelectorAll('.navi').forEach(x => x.classList.toggle('on', x.dataset.p === pid));
+  $('main').scrollTo(0, 0); window.scrollTo(0, 0);
+}
+document.querySelectorAll('.navi').forEach(n => n.addEventListener('click', () => activate(n.dataset.p)));
+document.addEventListener('click', e => { const c = e.target.closest('[data-go]'); if (c) activate(c.dataset.go); });
+$('brand').addEventListener('click', () => activate('p-home'));
 $('filter').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
   document.querySelectorAll('.navi').forEach(n => n.classList.toggle('hide', !n.textContent.toLowerCase().includes(q)));
