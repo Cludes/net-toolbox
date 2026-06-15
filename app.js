@@ -6,15 +6,18 @@ const kv = (k, v, hi) => `<div class="kv"><span class="k">${k}</span><span class
 // ── nav + filter ──
 function activate(pid) {
   document.querySelectorAll('.panel').forEach(x => x.classList.toggle('on', x.id === pid));
-  document.querySelectorAll('.navi').forEach(x => x.classList.toggle('on', x.dataset.p === pid));
-  $('main').scrollTo(0, 0); window.scrollTo(0, 0);
+  const home = pid === 'p-home';
+  $('back').classList.toggle('hidden', home);
+  $('filter').classList.toggle('hidden', !home);
+  window.scrollTo(0, 0);
 }
-document.querySelectorAll('.navi').forEach(n => n.addEventListener('click', () => activate(n.dataset.p)));
 document.addEventListener('click', e => { const c = e.target.closest('[data-go]'); if (c) activate(c.dataset.go); });
 $('brand').addEventListener('click', () => activate('p-home'));
+$('back').addEventListener('click', () => activate('p-home'));
 $('filter').addEventListener('input', e => {
   const q = e.target.value.toLowerCase();
-  document.querySelectorAll('.navi').forEach(n => n.classList.toggle('hide', !n.textContent.toLowerCase().includes(q)));
+  document.querySelectorAll('.card').forEach(c => c.classList.toggle('hide', !c.textContent.toLowerCase().includes(q)));
+  document.querySelectorAll('.group').forEach(g => g.classList.toggle('hide', ![...g.querySelectorAll('.card')].some(c => !c.classList.contains('hide'))));
 });
 
 // ── copy + toast ──
@@ -182,9 +185,9 @@ function jwt() {
     if (head.alg) c.push(kv('Algorithm', head.alg, true));
     if (body.iat) c.push(kv('Issued', new Date(body.iat * 1000).toLocaleString()));
     if (body.nbf) c.push(kv('Not before', new Date(body.nbf * 1000).toLocaleString()));
-    if (body.exp) { const ex = body.exp * 1000 < Date.now(); c.push(kv('Expires', new Date(body.exp * 1000).toLocaleString() + (ex ? ' — EXPIRED' : ''), !ex)); }
+    if (body.exp) { const ex = body.exp * 1000 < Date.now(); c.push(kv('Expires', new Date(body.exp * 1000).toLocaleString() + (ex ? ' - EXPIRED' : ''), !ex)); }
     $('jwt-claims').innerHTML = c.join('');
-    msg.className = 'msg ok'; msg.textContent = 'decoded — signature NOT verified';
+    msg.className = 'msg ok'; msg.textContent = 'decoded - signature NOT verified';
   } catch (e) { msg.className = 'msg bad'; msg.textContent = 'Could not decode: ' + e.message; }
 }
 $('jwt-in').addEventListener('input', jwt);
@@ -213,7 +216,7 @@ function rxRun() {
 // ── URL parser ──
 function urlParse() {
   const v = $('url-in').value.trim(); const out = $('url-out'); if (!v) { out.innerHTML = ''; return; }
-  let u; try { u = new URL(v); } catch { out.innerHTML = '<div class="err">Invalid URL — include the scheme, e.g. https://</div>'; return; }
+  let u; try { u = new URL(v); } catch { out.innerHTML = '<div class="err">Invalid URL - include the scheme, e.g. https://</div>'; return; }
   let rows = kv('Protocol', u.protocol) + kv('Host', u.host, true) + kv('Hostname', u.hostname) + kv('Port', u.port || '(default)') +
     kv('Path', u.pathname || '/') + (u.hash ? kv('Hash', u.hash) : '') + (u.username ? kv('User', u.username) : '');
   const params = [...u.searchParams.entries()];

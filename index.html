@@ -3,212 +3,152 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A fast dark toolbox for network and dev work: subnet, IP/ASN, DNS, converters, hashing, JWT, JSON, regex, generators and more." />
+  <meta name="description" content="A fast, modern toolbox for network and dev work: subnet, IP/ASN, DNS, converters, hashing, JWT, JSON, regex, generators and more." />
   <title>Net Toolbox</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <meta name="theme-color" content="#0a0b10" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="app">
-    <aside id="nav">
-      <button id="brand" class="brand"><span class="dot2"></span> Net&nbsp;Toolbox</button>
-      <input id="filter" placeholder="Filter tools…" spellcheck="false" />
+  <header id="top">
+    <button id="brand" class="brand"><span class="dot2"></span> Net&nbsp;Toolbox</button>
+    <button id="back" class="back hidden">← All tools</button>
+    <input id="filter" placeholder="Search tools…" spellcheck="false" />
+  </header>
 
-      <div class="cat">Network</div>
-      <button class="navi on" data-p="p-subnet">Subnet / CIDR</button>
-      <button class="navi" data-p="p-ip">IP / ASN lookup</button>
-      <button class="navi" data-p="p-dns">DNS lookup</button>
-
-      <div class="cat">Convert</div>
-      <button class="navi" data-p="p-base">Base / radix</button>
-      <button class="navi" data-p="p-time">Timestamp</button>
-      <button class="navi" data-p="p-color">Color</button>
-      <button class="navi" data-p="p-size">Data size</button>
-
-      <div class="cat">Encode &amp; hash</div>
-      <button class="navi" data-p="p-encode">Base64 / URL</button>
-      <button class="navi" data-p="p-hash">Hash (SHA)</button>
-      <button class="navi" data-p="p-jwt">JWT decoder</button>
-
-      <div class="cat">Format</div>
-      <button class="navi" data-p="p-json">JSON</button>
-      <button class="navi" data-p="p-regex">Regex</button>
-      <button class="navi" data-p="p-url">URL parser</button>
-      <button class="navi" data-p="p-text">Text tools</button>
-
-      <div class="cat">Generate</div>
-      <button class="navi" data-p="p-gen">Generators</button>
-      <button class="navi" data-p="p-qr">QR code</button>
-    </aside>
-
-    <main id="main">
-      <section id="p-home" class="panel on">
-        <div class="hero">
-          <div class="hero-grid"></div>
-          <div class="hero-inner">
-            <h1 class="hero-title">Net&nbsp;Toolbox</h1>
-            <p class="hero-sub">A fast, private toolbox for everyday network &amp; dev work — pick a tool to get started.</p>
-          </div>
+  <main id="main">
+    <section id="p-home" class="panel on">
+      <div class="hero">
+        <div class="hero-inner">
+          <h1 class="hero-title">Net&nbsp;Toolbox</h1>
+          <p class="hero-sub">A fast, private toolbox for everyday network &amp; dev work - pick a tool to get started.</p>
         </div>
+      </div>
+
+      <div class="group">
+        <div class="cat">Network</div>
         <div class="cards">
           <button class="card" data-go="p-subnet"><span class="card-t">Subnet / CIDR</span><span class="card-d">network, broadcast, hosts, wildcard</span></button>
           <button class="card" data-go="p-ip"><span class="card-t">IP / ASN lookup</span><span class="card-d">ASN, org &amp; geo for any IP</span></button>
           <button class="card" data-go="p-dns"><span class="card-t">DNS lookup</span><span class="card-d">A / AAAA / MX / TXT / NS records</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="cat">Convert</div>
+        <div class="cards">
           <button class="card" data-go="p-base"><span class="card-t">Base / radix</span><span class="card-d">dec ↔ hex ↔ bin ↔ oct</span></button>
           <button class="card" data-go="p-time"><span class="card-t">Timestamp</span><span class="card-d">epoch ↔ date, live clock</span></button>
           <button class="card" data-go="p-color"><span class="card-t">Color</span><span class="card-d">hex ↔ rgb ↔ hsl + swatch</span></button>
           <button class="card" data-go="p-size"><span class="card-t">Data size</span><span class="card-d">bytes ↔ KB / MB / GiB</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="cat">Encode &amp; hash</div>
+        <div class="cards">
           <button class="card" data-go="p-encode"><span class="card-t">Base64 / URL</span><span class="card-d">encode &amp; decode</span></button>
           <button class="card" data-go="p-hash"><span class="card-t">Hash</span><span class="card-d">SHA-1 / 256 / 384 / 512</span></button>
           <button class="card" data-go="p-jwt"><span class="card-t">JWT decoder</span><span class="card-d">header, payload, claims</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="cat">Format</div>
+        <div class="cards">
           <button class="card" data-go="p-json"><span class="card-t">JSON</span><span class="card-d">pretty, minify, validate</span></button>
           <button class="card" data-go="p-regex"><span class="card-t">Regex</span><span class="card-d">live match highlighting</span></button>
           <button class="card" data-go="p-url"><span class="card-t">URL parser</span><span class="card-d">parts + query params</span></button>
           <button class="card" data-go="p-text"><span class="card-t">Text tools</span><span class="card-d">case, slug, sort, dedupe</span></button>
+        </div>
+      </div>
+      <div class="group">
+        <div class="cat">Generate</div>
+        <div class="cards">
           <button class="card" data-go="p-gen"><span class="card-t">Generators</span><span class="card-d">UUID, password, hex</span></button>
           <button class="card" data-go="p-qr"><span class="card-t">QR code</span><span class="card-d">text / URL → QR</span></button>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section id="p-subnet" class="panel">
-        <h2>Subnet / CIDR calculator</h2>
-        <div class="row"><input id="cidr" placeholder="192.168.1.10/24" value="192.168.1.10/24" spellcheck="false" /></div>
-        <div id="subnet-out" class="out"></div>
-      </section>
+    <section id="p-subnet" class="panel"><h2>Subnet / CIDR calculator</h2>
+      <div class="row"><input id="cidr" placeholder="192.168.1.10/24" value="192.168.1.10/24" spellcheck="false" /></div>
+      <div id="subnet-out" class="out"></div></section>
 
-      <section id="p-ip" class="panel">
-        <h2>IP / ASN lookup</h2>
-        <div class="row"><input id="ipq" placeholder="8.8.8.8 (blank = your IP)" spellcheck="false" /><button id="ipgo">Look up</button></div>
-        <div id="ip-out" class="out"></div>
-      </section>
+    <section id="p-ip" class="panel"><h2>IP / ASN lookup</h2>
+      <div class="row"><input id="ipq" placeholder="8.8.8.8 (blank = your IP)" spellcheck="false" /><button id="ipgo">Look up</button></div>
+      <div id="ip-out" class="out"></div></section>
 
-      <section id="p-dns" class="panel">
-        <h2>DNS lookup</h2>
-        <div class="row">
-          <input id="dnsq" placeholder="example.com" spellcheck="false" />
-          <select id="dnstype">
-            <option>A</option><option>AAAA</option><option>MX</option><option>TXT</option>
-            <option>NS</option><option>CNAME</option><option>SOA</option><option>CAA</option>
-          </select>
-          <button id="dnsgo">Resolve</button>
-        </div>
-        <div id="dns-out" class="out"></div>
-      </section>
+    <section id="p-dns" class="panel"><h2>DNS lookup</h2>
+      <div class="row"><input id="dnsq" placeholder="example.com" spellcheck="false" />
+        <select id="dnstype"><option>A</option><option>AAAA</option><option>MX</option><option>TXT</option><option>NS</option><option>CNAME</option><option>SOA</option><option>CAA</option></select>
+        <button id="dnsgo">Resolve</button></div>
+      <div id="dns-out" class="out"></div></section>
 
-      <section id="p-base" class="panel">
-        <h2>Base / radix converter</h2>
-        <div class="field"><label>Decimal</label><input id="b-dec" data-base="10" spellcheck="false" /></div>
-        <div class="field"><label>Hex</label><input id="b-hex" data-base="16" spellcheck="false" /></div>
-        <div class="field"><label>Binary</label><input id="b-bin" data-base="2" spellcheck="false" /></div>
-        <div class="field"><label>Octal</label><input id="b-oct" data-base="8" spellcheck="false" /></div>
-      </section>
+    <section id="p-base" class="panel"><h2>Base / radix converter</h2>
+      <div class="field"><label>Decimal</label><input id="b-dec" data-base="10" spellcheck="false" /></div>
+      <div class="field"><label>Hex</label><input id="b-hex" data-base="16" spellcheck="false" /></div>
+      <div class="field"><label>Binary</label><input id="b-bin" data-base="2" spellcheck="false" /></div>
+      <div class="field"><label>Octal</label><input id="b-oct" data-base="8" spellcheck="false" /></div></section>
 
-      <section id="p-time" class="panel">
-        <h2>Timestamp converter</h2>
-        <div class="field"><label>Now</label><div id="t-now" class="mono big"></div></div>
-        <div class="field"><label>Unix epoch (s or ms)</label><input id="t-epoch" placeholder="1750000000" spellcheck="false" /></div>
-        <div id="t-from-epoch" class="out"></div>
-        <div class="field"><label>Date &amp; time</label><input id="t-date" type="datetime-local" /></div>
-        <div id="t-from-date" class="out"></div>
-      </section>
+    <section id="p-time" class="panel"><h2>Timestamp converter</h2>
+      <div class="field"><label>Now</label><div id="t-now" class="mono big"></div></div>
+      <div class="field"><label>Unix epoch (s or ms)</label><input id="t-epoch" placeholder="1750000000" spellcheck="false" /></div>
+      <div id="t-from-epoch" class="out"></div>
+      <div class="field"><label>Date &amp; time</label><input id="t-date" type="datetime-local" /></div>
+      <div id="t-from-date" class="out"></div></section>
 
-      <section id="p-color" class="panel">
-        <h2>Color converter</h2>
-        <div class="row">
-          <input id="c-hex" placeholder="#4ade80" value="#4ade80" spellcheck="false" />
-          <input id="c-pick" type="color" value="#4ade80" />
-        </div>
-        <div id="c-swatch" class="swatch"></div>
-        <div id="c-out" class="out"></div>
-      </section>
+    <section id="p-color" class="panel"><h2>Color converter</h2>
+      <div class="row"><input id="c-hex" placeholder="#818cf8" value="#818cf8" spellcheck="false" /><input id="c-pick" type="color" value="#818cf8" /></div>
+      <div id="c-swatch" class="swatch"></div><div id="c-out" class="out"></div></section>
 
-      <section id="p-size" class="panel">
-        <h2>Data size converter</h2>
-        <div class="row">
-          <input id="sz-val" placeholder="1500" value="1500" spellcheck="false" />
-          <select id="sz-unit"><option>B</option><option>KB</option><option>MB</option><option>GB</option><option>KiB</option><option>MiB</option><option selected>GiB</option><option>TiB</option></select>
-        </div>
-        <div id="sz-out" class="out"></div>
-      </section>
+    <section id="p-size" class="panel"><h2>Data size converter</h2>
+      <div class="row"><input id="sz-val" placeholder="1500" value="1500" spellcheck="false" />
+        <select id="sz-unit"><option>B</option><option>KB</option><option>MB</option><option>GB</option><option>KiB</option><option>MiB</option><option selected>GiB</option><option>TiB</option></select></div>
+      <div id="sz-out" class="out"></div></section>
 
-      <section id="p-encode" class="panel">
-        <h2>Base64 / URL encode</h2>
-        <textarea id="enc-in" rows="4" placeholder="text…" spellcheck="false"></textarea>
-        <div class="row wrap">
-          <button data-enc="b64">Base64 encode</button>
-          <button data-enc="b64d">Base64 decode</button>
-          <button data-enc="url">URL encode</button>
-          <button data-enc="urld">URL decode</button>
-        </div>
-        <div class="outwrap"><textarea id="enc-out" rows="4" placeholder="result…" spellcheck="false" readonly></textarea><button class="copy" data-copy="enc-out">Copy</button></div>
-      </section>
+    <section id="p-encode" class="panel"><h2>Base64 / URL encode</h2>
+      <textarea id="enc-in" rows="4" placeholder="text…" spellcheck="false"></textarea>
+      <div class="row wrap"><button data-enc="b64">Base64 encode</button><button data-enc="b64d">Base64 decode</button><button data-enc="url">URL encode</button><button data-enc="urld">URL decode</button></div>
+      <div class="outwrap"><textarea id="enc-out" rows="4" placeholder="result…" spellcheck="false" readonly></textarea><button class="copy" data-copy="enc-out">Copy</button></div></section>
 
-      <section id="p-hash" class="panel">
-        <h2>Hash (SHA)</h2>
-        <textarea id="hash-in" rows="4" placeholder="text to hash…" spellcheck="false"></textarea>
-        <div id="hash-out" class="out"></div>
-      </section>
+    <section id="p-hash" class="panel"><h2>Hash (SHA)</h2>
+      <textarea id="hash-in" rows="4" placeholder="text to hash…" spellcheck="false"></textarea>
+      <div id="hash-out" class="out"></div></section>
 
-      <section id="p-jwt" class="panel">
-        <h2>JWT decoder</h2>
-        <textarea id="jwt-in" rows="4" placeholder="eyJhbGci… (not verified, just decoded)" spellcheck="false"></textarea>
-        <div id="jwt-msg" class="msg"></div>
-        <div class="field"><label>Header</label><pre id="jwt-head" class="code"></pre></div>
-        <div class="field"><label>Payload</label><pre id="jwt-body" class="code"></pre></div>
-        <div id="jwt-claims" class="out"></div>
-      </section>
+    <section id="p-jwt" class="panel"><h2>JWT decoder</h2>
+      <textarea id="jwt-in" rows="4" placeholder="eyJhbGci… (not verified, just decoded)" spellcheck="false"></textarea>
+      <div id="jwt-msg" class="msg"></div>
+      <div class="field"><label>Header</label><pre id="jwt-head" class="code"></pre></div>
+      <div class="field"><label>Payload</label><pre id="jwt-body" class="code"></pre></div>
+      <div id="jwt-claims" class="out"></div></section>
 
-      <section id="p-json" class="panel">
-        <h2>JSON formatter</h2>
-        <textarea id="json-in" rows="8" placeholder='{"paste":"json here"}' spellcheck="false"></textarea>
-        <div class="row wrap"><button data-json="pretty">Pretty</button><button data-json="min">Minify</button><span id="json-msg" class="msg"></span></div>
-        <div class="outwrap"><textarea id="json-out" rows="8" spellcheck="false" readonly></textarea><button class="copy" data-copy="json-out">Copy</button></div>
-      </section>
+    <section id="p-json" class="panel"><h2>JSON formatter</h2>
+      <textarea id="json-in" rows="8" placeholder='{"paste":"json here"}' spellcheck="false"></textarea>
+      <div class="row wrap"><button data-json="pretty">Pretty</button><button data-json="min">Minify</button><span id="json-msg" class="msg"></span></div>
+      <div class="outwrap"><textarea id="json-out" rows="8" spellcheck="false" readonly></textarea><button class="copy" data-copy="json-out">Copy</button></div></section>
 
-      <section id="p-regex" class="panel">
-        <h2>Regex tester</h2>
-        <div class="row"><input id="rx-pat" placeholder="\\b\\w+@\\w+\\.\\w+\\b" spellcheck="false" /><input id="rx-flags" class="flags" placeholder="gi" value="g" spellcheck="false" /></div>
-        <textarea id="rx-test" rows="6" placeholder="test string…" spellcheck="false"></textarea>
-        <div id="rx-msg" class="msg"></div>
-        <div id="rx-out" class="hl"></div>
-      </section>
+    <section id="p-regex" class="panel"><h2>Regex tester</h2>
+      <div class="row"><input id="rx-pat" placeholder="\\b\\w+@\\w+\\.\\w+\\b" spellcheck="false" /><input id="rx-flags" class="flags" placeholder="gi" value="g" spellcheck="false" /></div>
+      <textarea id="rx-test" rows="6" placeholder="test string…" spellcheck="false"></textarea>
+      <div id="rx-msg" class="msg"></div><div id="rx-out" class="hl"></div></section>
 
-      <section id="p-url" class="panel">
-        <h2>URL parser</h2>
-        <div class="row"><input id="url-in" placeholder="https://user:pw@host:8080/path?a=1&b=2#frag" spellcheck="false" /></div>
-        <div id="url-out" class="out"></div>
-      </section>
+    <section id="p-url" class="panel"><h2>URL parser</h2>
+      <div class="row"><input id="url-in" placeholder="https://user:pw@host:8080/path?a=1&b=2#frag" spellcheck="false" /></div>
+      <div id="url-out" class="out"></div></section>
 
-      <section id="p-text" class="panel">
-        <h2>Text tools</h2>
-        <textarea id="tx-in" rows="6" placeholder="your text…" spellcheck="false"></textarea>
-        <div id="tx-stats" class="msg"></div>
-        <div class="row wrap">
-          <button data-tx="upper">UPPER</button><button data-tx="lower">lower</button>
-          <button data-tx="title">Title</button><button data-tx="slug">slugify</button>
-          <button data-tx="sort">sort lines</button><button data-tx="dedupe">dedupe</button>
-          <button data-tx="reverse">reverse lines</button><button data-tx="trim">trim lines</button>
-        </div>
-        <div class="outwrap"><textarea id="tx-out" rows="6" spellcheck="false" readonly></textarea><button class="copy" data-copy="tx-out">Copy</button></div>
-      </section>
+    <section id="p-text" class="panel"><h2>Text tools</h2>
+      <textarea id="tx-in" rows="6" placeholder="your text…" spellcheck="false"></textarea>
+      <div id="tx-stats" class="msg"></div>
+      <div class="row wrap"><button data-tx="upper">UPPER</button><button data-tx="lower">lower</button><button data-tx="title">Title</button><button data-tx="slug">slugify</button><button data-tx="sort">sort lines</button><button data-tx="dedupe">dedupe</button><button data-tx="reverse">reverse lines</button><button data-tx="trim">trim lines</button></div>
+      <div class="outwrap"><textarea id="tx-out" rows="6" spellcheck="false" readonly></textarea><button class="copy" data-copy="tx-out">Copy</button></div></section>
 
-      <section id="p-gen" class="panel">
-        <h2>Generators</h2>
-        <div class="field"><label>UUID v4</label><div class="row"><input id="g-uuid" readonly class="mono" /><button id="g-uuid-btn">New</button><button class="copy" data-copy="g-uuid">Copy</button></div></div>
-        <div class="field"><label>Password <span id="g-pwlen-l" class="muted">20</span></label>
-          <div class="row"><input id="g-pwlen" type="range" min="6" max="64" value="20" /><button id="g-pw-btn">Generate</button><button class="copy" data-copy="g-pw">Copy</button></div>
-          <input id="g-pw" readonly class="mono" /></div>
-        <div class="field"><label>Random hex (32 bytes)</label><div class="row"><input id="g-hex" readonly class="mono" /><button id="g-hex-btn">New</button><button class="copy" data-copy="g-hex">Copy</button></div></div>
-      </section>
+    <section id="p-gen" class="panel"><h2>Generators</h2>
+      <div class="field"><label>UUID v4</label><div class="row"><input id="g-uuid" readonly class="mono" /><button id="g-uuid-btn">New</button><button class="copy" data-copy="g-uuid">Copy</button></div></div>
+      <div class="field"><label>Password <span id="g-pwlen-l" class="muted">20</span></label><div class="row"><input id="g-pwlen" type="range" min="6" max="64" value="20" /><button id="g-pw-btn">Generate</button><button class="copy" data-copy="g-pw">Copy</button></div><input id="g-pw" readonly class="mono" /></div>
+      <div class="field"><label>Random hex (32 bytes)</label><div class="row"><input id="g-hex" readonly class="mono" /><button id="g-hex-btn">New</button><button class="copy" data-copy="g-hex">Copy</button></div></div></section>
 
-      <section id="p-qr" class="panel">
-        <h2>QR code</h2>
-        <div class="row"><input id="qr-in" placeholder="text or URL…" value="https://net-toolbox.pages.dev" spellcheck="false" /><button id="qr-go">Make</button></div>
-        <div id="qr-out" class="qrbox"></div>
-      </section>
-    </main>
-  </div>
+    <section id="p-qr" class="panel"><h2>QR code</h2>
+      <div class="row"><input id="qr-in" placeholder="text or URL…" value="https://net-toolbox.pages.dev" spellcheck="false" /><button id="qr-go">Make</button></div>
+      <div id="qr-out" class="qrbox"></div></section>
+  </main>
   <div id="toast">copied</div>
   <script src="app.js"></script>
 </body>
